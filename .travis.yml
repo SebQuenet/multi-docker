@@ -1,0 +1,23 @@
+sudo: required
+services:
+  - docker
+
+before_install:
+  - docker build -t sebquenet/react-test -f ./client/Dockerfile.dev ./client
+
+script:
+  - docker run sebquenet/react-test npm test -- --coverage
+
+after_success:
+  - docker build -t sebquenet/multi-client ./client
+  - docker build -t sebquenet/multi-nginx ./nginx
+  - docker build -t sebquenet/multi-server ./server
+  - docker build -t sebquenet/multi-worker ./worker
+  # Login to the Docker CLI
+  - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_ID" --password-stdin
+  # Take thos images and push them to docker hub
+  - docker push sebquenet/multi-client 
+  - docker push sebquenet/multi-nginx
+  - docker push sebquenet/multi-server
+  - docker push sebquenet/multi-worker
+
